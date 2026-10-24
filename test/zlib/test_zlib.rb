@@ -283,6 +283,20 @@ if defined? Zlib
       assert_equal "foofoofoo", out
     end
 
+    def test_inflate_returns_all_decodable_output
+      stream = Zlib::Deflate.deflate("0" * 2049)
+      prefix = stream.byteslice(0, 11)
+      ref = Zlib::Inflate.new
+      ref.avail_out = 1 << 16
+      expected = ref.inflate(prefix)
+      ref.close
+      z = Zlib::Inflate.new
+      # the initial 1024-byte output buffer fills up exactly as the input runs
+      # out; the remaining decodable bytes used to be withheld until #finish
+      assert_equal(expected, z.inflate(prefix))
+      z.close
+    end
+
     def test_finish_chunked
       # zeros = Zlib::Deflate.deflate("0" * 100_000)
       zeros = "x\234\355\3011\001\000\000\000\302\240J\353\237\316\032\036@" \

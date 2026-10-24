@@ -1090,6 +1090,7 @@ zstream_run_func(struct zstream_run_args *args)
     uInt n;
 
     int err = Z_OK;
+    int drained = 0; /* inflate() re-run without input to drain pending output */
     while (!args->interrupt) {
         n = z->stream.avail_out;
 
@@ -1103,6 +1104,13 @@ zstream_run_func(struct zstream_run_args *args)
             break;
         }
 
+        if (err == Z_BUF_ERROR && drained) {
+            /* nothing was pending after all */
+            z->flags |= ZSTREAM_FLAG_IN_STREAM;
+            err = Z_OK;
+            break;
+        }
+
         if (err != Z_OK && err != Z_BUF_ERROR) {
             break;
         }
@@ -1113,11 +1121,11 @@ zstream_run_func(struct zstream_run_args *args)
         }
 
         if (z->stream.avail_in == 0 && z->func == &inflate_funcs) {
-            /* break here because inflate() return Z_BUF_ERROR when avail_in == 0. */
-            /* but deflate() could be called with avail_in == 0 (there's hidden buffer
-                in zstream->state) */
-            z->flags |= ZSTREAM_FLAG_IN_STREAM;
-            break;
+            /* The output buffer filled up exactly as the input ran out. inflate()
+             * may still hold output (a match cut short by the full buffer, or
+             * symbols in its bit accumulator), so give it room once more; it
+             * reports Z_BUF_ERROR when nothing is left, handled above. */
+            drained = 1;
         }
 
         if (args->stream_output) {
