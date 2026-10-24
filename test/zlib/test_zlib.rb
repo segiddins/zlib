@@ -1367,6 +1367,19 @@ if defined? Zlib
       }
     end
 
+    def test_gets_utf16_external_encoding
+      pend "rb_io_extract_encoding_option ignores the encoding options on TruffleRuby" if RUBY_ENGINE == 'truffleruby'
+      content = "ab\ncd\nef".encode("UTF-16LE")
+      lines = ["ab\n", "cd\n", "ef"].map { |l| l.encode("UTF-16LE") }
+      r = Zlib::GzipReader.new(StringIO.new(Zlib.gzip(content.b)), external_encoding: "UTF-16LE")
+      assert_equal(lines, r.each_line.to_a)
+      r = Zlib::GzipReader.new(StringIO.new(Zlib.gzip(content.b)), external_encoding: "UTF-16LE")
+      assert_equal(lines[0], r.gets)
+      assert_equal(lines[1], r.readline)
+      assert_equal(lines[2], r.gets(100))
+      assert_nil(r.gets)
+    end
+
     def test_corrupted_header
       gz = Zlib::GzipWriter.new(StringIO.new(s = "".dup))
       gz.orig_name = "X"

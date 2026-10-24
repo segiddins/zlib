@@ -4426,6 +4426,15 @@ gzreader_gets(int argc, VALUE *argv, VALUE obj)
 	}
     }
 
+    if (!NIL_P(rs) && rs == rb_rs) {
+	/* The default separator is "\n" in an ASCII-compatible encoding; match
+	 * it in the encoding of the data, as IO does. */
+	rb_encoding *renc = gz->enc2 ? gz->enc2 : gz->enc;
+	if (!rb_enc_asciicompat(renc) && !rb_enc_dummy_p(renc)) {
+	    rs = rb_str_encode(rs, rb_enc_from_encoding(renc), 0, Qnil);
+	}
+    }
+
     if (NIL_P(rs)) {
 	if (limit < 0) {
 	    dst = gzfile_read_all(gz, Qnil);
