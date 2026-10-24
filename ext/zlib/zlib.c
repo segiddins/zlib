@@ -3866,6 +3866,9 @@ rb_gzwriter_flush(int argc, VALUE *argv, VALUE obj)
     rb_scan_args(argc, argv, "01", &v_flush);
 
     flush = FIXNUMARG(v_flush, Z_SYNC_FLUSH);
+    if (!(gz->z.flags & GZFILE_FLAG_HEADER_FINISHED)) {
+	gzfile_make_header(gz);
+    }
     if (flush != Z_NO_FLUSH) {  /* prevent Z_BUF_ERROR */
 	zstream_run(&gz->z, (Bytef*)"", 0, flush);
     }

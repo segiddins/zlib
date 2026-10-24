@@ -1535,6 +1535,15 @@ if defined? Zlib
       }
     end
 
+    def test_flush_before_first_write
+      io = StringIO.new("".b)
+      Zlib::GzipWriter.wrap(io) { |gz| gz.flush; gz.write("abc") }
+      assert_equal("abc", Zlib.gunzip(io.string))
+      io = StringIO.new("".b)
+      Zlib::GzipWriter.wrap(io) { |gz| gz.flush }
+      assert_equal("", Zlib.gunzip(io.string))
+    end
+
     def test_writer_wrap
       Tempfile.create("test_zlib_gzip_writer_wrap") {|t|
         t.binmode
