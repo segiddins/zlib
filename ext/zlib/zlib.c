@@ -3907,9 +3907,17 @@ static VALUE
 rb_gzwriter_putc(VALUE obj, VALUE ch)
 {
     struct gzfile *gz = get_gzfile(obj);
-    char c = NUM2CHR(ch);
 
-    gzfile_write(gz, (Bytef*)&c, 1);
+    if (RB_TYPE_P(ch, T_STRING)) {
+	/* like IO#putc: write the first character, with encoding conversion */
+	VALUE str = rb_str_substr(ch, 0, 1);
+	rb_gzwriter_write(1, &str, obj);
+	RB_GC_GUARD(str);
+    }
+    else {
+	char c = NUM2CHR(ch);
+	gzfile_write(gz, (Bytef*)&c, 1);
+    }
     return ch;
 }
 

@@ -1527,6 +1527,17 @@ if defined? Zlib
       }
     end
 
+    def test_putc_string
+      io = StringIO.new("".b)
+      Zlib::GzipWriter.wrap(io) do |gz|
+        gz.putc([0x3042, 0x3044].pack("U*"))   # first character, not first byte
+        gz.putc("")                             # nothing, like IO#putc
+        gz.putc(65)
+        gz.putc("bc")
+      end
+      assert_equal([0x3042].pack("U") + "Ab", Zlib.gunzip(io.string).force_encoding("UTF-8"))
+    end
+
     def test_puts
       Tempfile.create("test_zlib_gzip_writer_puts") {|t|
         t.close
