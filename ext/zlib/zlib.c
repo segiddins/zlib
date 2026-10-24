@@ -4468,7 +4468,9 @@ gzreader_gets(int argc, VALUE *argv, VALUE obj)
     while (ZSTREAM_BUF_FILLED(&gz->z) < rslen) {
 	if (ZSTREAM_IS_FINISHED(&gz->z)) {
 	    if (ZSTREAM_BUF_FILLED(&gz->z) > 0) gz->lineno++;
-	    return gzfile_read(gz, rslen, Qnil);
+	    dst = gzfile_read(gz, rslen, Qnil);
+	    if (NIL_P(dst)) return dst;
+	    return gzfile_newstr(gz, dst);
 	}
 	gzfile_read_more(gz, Qnil);
     }

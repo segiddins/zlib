@@ -1367,6 +1367,16 @@ if defined? Zlib
       }
     end
 
+    def test_gets_encoding_when_shorter_than_separator
+      pend "rb_io_extract_encoding_option ignores the encoding options on TruffleRuby" if RUBY_ENGINE == 'truffleruby'
+      r = Zlib::GzipReader.new(StringIO.new(Zlib.gzip("ab")), external_encoding: "UTF-8")
+      line = r.gets("xyz")
+      assert_equal("ab", line)
+      assert_equal(Encoding::UTF_8, line.encoding)
+      r = Zlib::GzipReader.new(StringIO.new(Zlib.gzip("caf\xE9".b)), external_encoding: "ISO-8859-1", internal_encoding: "UTF-8")
+      assert_equal("caf\u00E9", r.gets("xyz"))
+    end
+
     def test_corrupted_header
       gz = Zlib::GzipWriter.new(StringIO.new(s = "".dup))
       gz.orig_name = "X"
