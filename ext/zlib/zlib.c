@@ -4323,6 +4323,13 @@ static VALUE
 rb_gzreader_ungetbyte(VALUE obj, VALUE ch)
 {
     struct gzfile *gz = get_gzfile(obj);
+    if (NIL_P(ch)) return Qnil;
+    if (RB_TYPE_P(ch, T_STRING)) {
+	/* like IO#ungetbyte, push back every byte of the string as-is */
+	gzfile_ungets(gz, (const Bytef*)RSTRING_PTR(ch), RSTRING_LEN(ch));
+	RB_GC_GUARD(ch);
+	return Qnil;
+    }
     gzfile_ungetbyte(gz, NUM2CHR(ch));
     return Qnil;
 }

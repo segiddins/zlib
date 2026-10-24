@@ -1367,6 +1367,17 @@ if defined? Zlib
       }
     end
 
+    def test_ungetbyte_string
+      r = Zlib::GzipReader.new(StringIO.new(Zlib.gzip("xyz")))
+      r.read(1)
+      r.ungetbyte("ABC")
+      assert_equal(-2, r.pos)
+      assert_equal("ABCyz", r.read)
+      assert_nil(r.ungetbyte(""))
+      assert_nil(r.ungetbyte(nil))
+      assert_equal("", r.read)
+    end
+
     def test_corrupted_header
       gz = Zlib::GzipWriter.new(StringIO.new(s = "".dup))
       gz.orig_name = "X"
