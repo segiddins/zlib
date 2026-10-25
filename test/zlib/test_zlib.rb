@@ -1217,6 +1217,35 @@ if defined? Zlib
       }
     end
 
+    def test_read_len_beyond_int
+      omit "needs a 64-bit long" if [1].pack("l!").bytesize < 8
+      Tempfile.create("test_zlib_gzip_reader_read_len_beyond_int") {|t|
+        t.close
+        Zlib::GzipWriter.open(t.path) {|gz| gz.print("foobar") }
+    
+        [2**31, 2**32].each do |len|
+          Zlib::GzipReader.open(t.path) do |f|
+            assert_equal("foobar", f.read(len))
+            assert_nil(f.read(len))
+          end
+    
+          Zlib::GzipReader.open(t.path) do |f|
+            s = "".b
+            assert_same(s, f.read(len, s))
+            assert_equal("foobar", s)
+          end
+    
+          Zlib::GzipReader.open(t.path) do |f|
+            s = f.readpartial(len)
+            assert_not_empty(s)
+            assert("foobar".start_with?(s))
+            f.read
+            assert_raise(EOFError) { f.readpartial(len) }
+          end
+        end
+      }
+    end
+    
     def test_getc
       Tempfile.create("test_zlib_gzip_reader_getc") {|t|
         t.close

@@ -4156,7 +4156,7 @@ rb_gzreader_read(int argc, VALUE *argv, VALUE obj)
 	return gzfile_read_all(gz, outbuf);
     }
 
-    len = NUM2INT(vlen);
+    len = NUM2LEN(vlen);
     if (len < 0) {
 	rb_raise(rb_eArgError, "negative length %"PRIdLEN" given", len);
     }
@@ -4184,7 +4184,7 @@ rb_gzreader_readpartial(int argc, VALUE *argv, VALUE obj)
 
     rb_scan_args(argc, argv, "11", &vlen, &outbuf);
 
-    len = NUM2INT(vlen);
+    len = NUM2LEN(vlen);
     if (len < 0) {
 	rb_raise(rb_eArgError, "negative length %"PRIdLEN" given", len);
     }
